@@ -24,10 +24,6 @@ export default function ResultsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [diagnosticRules, setDiagnosticRules] = useState<DiagnosticRule[]>([]);
 
-  // Sub-view management within results
-  const [currentSubView, setCurrentSubView] = useState('list');
-  const [viewParams, setViewParams] = useState<any>({});
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -52,16 +48,6 @@ export default function ResultsPage() {
     fetchData();
   }, []);
 
-  const handleNavigate = (view: string, params: any = {}) => {
-    if (view === 'results') {
-      setCurrentSubView('list');
-    } else {
-      setCurrentSubView(view);
-      setViewParams(params);
-    }
-    window.scrollTo(0, 0);
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
@@ -73,34 +59,12 @@ export default function ResultsPage() {
 
   return (
     <div className="animate-fadeIn">
-      {currentSubView === 'list' && (
-        <AdminResults 
-          attempts={attempts} 
-          questions={questions} 
-          sessions={sessions} 
-          diagnosticRules={diagnosticRules} 
-          onNavigate={handleNavigate} 
-        />
-      )}
-      {currentSubView === 'result-session' && (
-        <AdminSessionAttempts 
-          sessionKey={viewParams.sessionKey} 
-          attempts={attempts} 
-          questions={questions} 
-          sessions={sessions} 
-          diagnosticRules={diagnosticRules} 
-          onNavigate={handleNavigate} 
-        />
-      )}
-      {currentSubView === 'result-detail' && (
-        <AdminResultDetail 
-          attemptId={viewParams.attemptId} 
-          attempts={attempts} 
-          questions={questions} 
-          diagnosticRules={diagnosticRules} 
-          onNavigate={handleNavigate} 
-        />
-      )}
+      <AdminResults 
+        attempts={attempts} 
+        questions={questions} 
+        sessions={sessions} 
+        diagnosticRules={diagnosticRules} 
+      />
     </div>
   );
 }

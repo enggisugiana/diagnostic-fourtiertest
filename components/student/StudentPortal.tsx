@@ -75,7 +75,7 @@ const StudentPortal: React.FC<StudentPortalProps> = ({
       setActiveQuiz({
         questions: quizQuestions,
         currentIndex: 0,
-        answers: Array(quizQuestions.length).fill({ t1: -1, t2: null, t3: -1, t4: null }),
+        answers: quizQuestions.map(q => ({ questionId: q.id, t1: -1, t2: null, t3: -1, t4: null })),
         isFinished: false,
         startTime: Date.now(),
         timeLeft: sessionDuration * 60
@@ -222,6 +222,9 @@ const StudentPortal: React.FC<StudentPortalProps> = ({
     if (tier === 3) curr.t3 = val;
     if (tier === 4) curr.t4 = val;
     newAnswers[activeQuiz.currentIndex] = curr;
+    if (!curr.questionId && activeQuiz.questions[activeQuiz.currentIndex]) {
+      curr.questionId = activeQuiz.questions[activeQuiz.currentIndex].id;
+    }
     setActiveQuiz({ ...activeQuiz, answers: newAnswers });
   };
 

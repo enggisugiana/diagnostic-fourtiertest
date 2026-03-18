@@ -1,16 +1,17 @@
 
 import React, { useState } from 'react';
-import { Session } from '@/types';
+import { Session, QuizAttempt } from '@/types';
 import ConfirmModal from '../common/ConfirmModal';
 
 interface AdminSessionsProps {
   sessions: Session[];
+  attempts: QuizAttempt[];
   onAddSession: (name: string, school: string, startTime: string, endTime: string, durationMinutes: number, key: string, randomizeQuestions: boolean) => void;
   onToggleSession: (id: string) => void;
   onDeleteSession: (id: string) => void;
 }
 
-const AdminSessions: React.FC<AdminSessionsProps> = ({ sessions, onAddSession, onToggleSession, onDeleteSession }) => {
+const AdminSessions: React.FC<AdminSessionsProps> = ({ sessions, attempts, onAddSession, onToggleSession, onDeleteSession }) => {
   const [sessionName, setSessionName] = useState('');
   const [school, setSchool] = useState('');
   const now = new Date();

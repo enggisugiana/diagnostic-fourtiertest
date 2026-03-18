@@ -161,8 +161,8 @@ const AdminSubjects: React.FC<AdminSubjectsProps> = ({ onNavigate }) => {
           <div className="p-12 text-center text-slate-400 text-sm font-bold">Belum ada subjek. Silakan tambah baru.</div>
         ) : (
           <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-teal-50/50 border-b border-teal-50 text-[10px] uppercase tracking-widest text-[#016569]">
+            <thead className="bg-[#016569] text-white uppercase font-black">
+              <tr>
                 <th className="p-4 pl-6 w-16 text-center">No</th>
                 <th className="p-4">Nama Subjek</th>
                 <th className="p-4 text-center w-32">Total Indikator</th>

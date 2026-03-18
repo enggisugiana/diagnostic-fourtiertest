@@ -74,6 +74,7 @@ export interface Student {
 }
 
 export interface TierAnswer {
+  questionId?: string;
   t1: number;
   t2: boolean | null;
   t3: number;

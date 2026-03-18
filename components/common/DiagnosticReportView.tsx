@@ -9,6 +9,7 @@ interface DiagnosticReportViewProps {
   showEvaluation?: boolean;
   onShowEvaluationToggle?: () => void;
   isAdmin?: boolean;
+  allAttempts?: QuizAttempt[];
   onPrint?: () => void;
   onClose?: () => void;
 }
@@ -22,7 +23,7 @@ const formatDuration = (sec: number) => {
 const getPerc = (val: number, total: number) => total > 0 ? Number(((val / total) * 100).toFixed(1)) : 0;
 
 const DiagnosticReportView: React.FC<DiagnosticReportViewProps> = ({ 
-  attempt, questions, diagnosticRules, showEvaluation, onShowEvaluationToggle, isAdmin, onPrint, onClose 
+  attempt, questions, diagnosticRules, showEvaluation, onShowEvaluationToggle, isAdmin, allAttempts, onPrint, onClose 
 }) => {
   const a = attempt;
   const pieData = [
@@ -32,6 +33,53 @@ const DiagnosticReportView: React.FC<DiagnosticReportViewProps> = ({
     { name: 'TPK', full: 'Tidak Paham Konsep', value: a.stats.tidakPahamKonsep, color: '#f59e0b' },
     { name: 'L', full: 'Lainnya', value: a.stats.tidakDapatDikategorikan, color: '#94a3b8' }
   ];
+  
+  // Logic for detailed misconception alert (only for admin)
+  const misconceptionDetails = React.useMemo(() => {
+    if (!isAdmin || !a) return [];
+    
+    const details: { subject: string; indicator: string; questionNo: number; count: number }[] = [];
+    
+    a.answers.forEach((ans, idx) => {
+      let q = questions.find(question => question.id === ans.questionId);
+      if (!q && !ans.questionId) q = questions[idx];
+      if (!q) return;
+
+      const ruleKey = `${ans.t1 === q.t1Correct}_${ans.t2 === true}_${ans.t3 === q.t3Correct}_${ans.t4 === true}`;
+      const rule = diagnosticRules.find(r => r.id === ruleKey);
+      
+      if (rule?.category === 'miskonsepsi') {
+        const indicatorQs = questions.filter(prevQ => prevQ.indicatorId === q.indicatorId);
+        const relNo = indicatorQs.findIndex(prevQ => prevQ.id === q.id) + 1;
+        
+        let globalCount = 0;
+        if (allAttempts) {
+          allAttempts.forEach(at => {
+            at.answers.forEach((otherAns, otherIdx) => {
+              let otherQ = questions.find(question => question.id === otherAns.questionId);
+              if (!otherQ && !otherAns.questionId) otherQ = questions[otherIdx];
+              
+              if (otherQ && otherQ.id === q.id) {
+                const otherRuleKey = `${otherAns.t1 === otherQ.t1Correct}_${otherAns.t2 === true}_${otherAns.t3 === otherQ.t3Correct}_${otherAns.t4 === true}`;
+                const otherRule = diagnosticRules.find(r => r.id === otherRuleKey);
+                if (otherRule?.category === 'miskonsepsi') {
+                  globalCount++;
+                }
+              }
+            });
+          });
+        }
+
+        details.push({ 
+          subject: q.subject || 'N/A', 
+          indicator: q.indicatorName || 'N/A', 
+          questionNo: relNo,
+          count: globalCount
+        });
+      }
+    });
+    return details;
+  }, [isAdmin, a, questions, diagnosticRules, allAttempts]);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-12 printable-content">
@@ -64,6 +112,8 @@ const DiagnosticReportView: React.FC<DiagnosticReportViewProps> = ({
             )}
           </div>
         </div>
+
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
            <div className="lg:col-span-1 space-y-4">

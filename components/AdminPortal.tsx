@@ -54,7 +54,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({
     if (tabId === 'subjects' && ['indicators', 'questions'].includes(currentView)) {
       return true;
     }
-    if (tabId === 'results' && ['result-session', 'result-detail'].includes(currentView)) {
+    if (tabId === 'results') {
       return true;
     }
     return currentView === tabId;
@@ -68,6 +68,7 @@ const AdminPortal: React.FC<AdminPortalProps> = ({
         return (
           <AdminSessions 
             sessions={sessions} 
+            attempts={attempts}
             onAddSession={onAddSession} 
             onToggleSession={onToggleSession} 
             onDeleteSession={onDeleteSession} 
@@ -90,11 +91,11 @@ const AdminPortal: React.FC<AdminPortalProps> = ({
           />
         );
       case 'results':
-        return <AdminResults attempts={attempts} questions={questions} sessions={sessions} diagnosticRules={diagnosticRules} onNavigate={navigateTo} />;
+        return <AdminResults attempts={attempts} questions={questions} sessions={sessions} diagnosticRules={diagnosticRules} />;
       case 'result-session':
-        return <AdminSessionAttempts sessionKey={viewParams.sessionKey} attempts={attempts} questions={questions} sessions={sessions} diagnosticRules={diagnosticRules} onNavigate={navigateTo} />;
+        return <AdminSessionAttempts sessionKey={viewParams.sessionKey} attempts={attempts} questions={questions} sessions={sessions} diagnosticRules={diagnosticRules} />;
       case 'result-detail':
-        return <AdminResultDetail attemptId={viewParams.attemptId} attempts={attempts} questions={questions} diagnosticRules={diagnosticRules} onNavigate={navigateTo} />;
+        return <AdminResultDetail attemptId={viewParams.attemptId} attempts={attempts} questions={questions} diagnosticRules={diagnosticRules} />;
       case 'settings':
         return (
           <AdminSettings 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { QuizAttempt, Question, Session, DiagnosticRule } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Link from 'next/link';
 
 interface AdminSessionAttemptsProps {
   sessionKey: string;
@@ -8,10 +9,9 @@ interface AdminSessionAttemptsProps {
   questions: Question[];
   sessions: Session[];
   diagnosticRules: DiagnosticRule[];
-  onNavigate: (view: string, params?: any) => void;
 }
 
-const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey, attempts, questions, sessions, diagnosticRules, onNavigate }) => {
+const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey, attempts, questions, sessions, diagnosticRules }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -48,6 +48,40 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
     return { studentCount, avgScore, avgDiagnostic: aggregateDiagnostic };
   }, [currentSession, attempts]);
 
+  const misconceptionDetails = useMemo(() => {
+    const sessionAttempts = attempts.filter(a => a.sessionKey === sessionKey);
+    const details: { subject: string; indicator: string; questionNo: number; count: number }[] = [];
+    
+    sessionAttempts.forEach(attempt => {
+      attempt.answers.forEach((ans, idx) => {
+        let q = questions.find(question => question.id === ans.questionId);
+        if (!q && !ans.questionId) q = questions[idx];
+        if (!q) return;
+
+        const ruleKey = `${ans.t1 === q.t1Correct}_${ans.t2 === true}_${ans.t3 === q.t3Correct}_${ans.t4 === true}`;
+        const rule = diagnosticRules.find(r => r.id === ruleKey);
+        
+        if (rule?.category === 'miskonsepsi') {
+          const indicatorQuestions = questions.filter(prevQ => prevQ.indicatorId === q.indicatorId);
+          const relativeNo = indicatorQuestions.findIndex(prevQ => prevQ.id === q.id) + 1;
+
+          const existing = details.find(m => m.subject === q.subject && m.indicator === q.indicatorName && m.questionNo === relativeNo);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            details.push({
+              subject: q.subject || 'N/A',
+              indicator: q.indicatorName || 'N/A',
+              questionNo: relativeNo,
+              count: 1
+            });
+          }
+        }
+      });
+    });
+    return details.sort((a,b) => b.count - a.count);
+  }, [attempts, sessionKey, questions, diagnosticRules]);
+
   const filteredAttempts = useMemo(() => {
     return attempts.filter(a => 
       a.sessionKey === sessionKey && (
@@ -66,7 +100,7 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
       <div className="bg-white p-12 rounded-2xl border border-teal-50 text-center space-y-4">
         <i className="fas fa-exclamation-triangle text-amber-400 text-4xl"></i>
         <p className="text-[#016569] font-black uppercase tracking-tight">Sesi tidak ditemukan</p>
-        <button onClick={() => onNavigate('results')} className="inline-block bg-[#016569] text-white px-6 py-2 rounded-xl text-xs font-black uppercase">Kembali</button>
+        <Link href="/console/management/results" className="inline-block bg-[#016569] text-white px-6 py-2 rounded-xl text-xs font-black uppercase">Kembali</Link>
       </div>
     );
   }
@@ -84,9 +118,9 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
   return (
     <div className="space-y-8 animate-fadeIn">
       <div className="flex justify-between items-center">
-        <button onClick={() => onNavigate('results')} className="text-[#016569] font-black text-[10px] uppercase flex items-center gap-2 hover:translate-x-[-4px] transition-all">
+        <Link href="/console/management/results" className="text-[#016569] font-black text-[10px] uppercase flex items-center gap-2 hover:translate-x-[-4px] transition-all">
           <i className="fas fa-arrow-left"></i> Kembali ke Daftar Sesi
-        </button>
+        </Link>
         <div className="text-right">
            <h2 className="text-xl font-black text-[#016569] uppercase tracking-tight">{currentSession.name}</h2>
         </div>
@@ -127,57 +161,33 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
          </div>
       </div>
 
-      {/* Misconception Analysis for current session */}
-      {(() => {
-        interface MisconceptionDetail {
-          subject: string;
-          indicator: string;
-          questionNo: number;
-          count: number;
-        }
-        const sessionMisconceptions: MisconceptionDetail[] = [];
-        const sessionAttempts = attempts.filter(a => a.sessionKey === sessionKey);
-        
-        sessionAttempts.forEach(attempt => {
-          attempt.answers.forEach((ans, idx) => {
-            const q = questions[idx];
-            if (!q) return;
-            const ruleKey = `${ans.t1 === q.t1Correct}_${ans.t2 === true}_${ans.t3 === q.t3Correct}_${ans.t4 === true}`;
-            const rule = diagnosticRules.find(r => r.id === ruleKey);
-            if (rule?.category === 'miskonsepsi') {
-              const indicatorQs = questions.filter(prevQ => prevQ.indicatorId === q.indicatorId);
-              const relNo = indicatorQs.findIndex(prevQ => prevQ.id === q.id) + 1;
-              const existing = sessionMisconceptions.find(m => m.subject === q.subject && m.indicator === q.indicatorName && m.questionNo === relNo);
-              if (existing) existing.count++;
-              else sessionMisconceptions.push({ subject: q.subject || 'N/A', indicator: q.indicatorName || 'N/A', questionNo: relNo, count: 1 });
-            }
-          });
-        });
-
-        if (sessionMisconceptions.length === 0) return null;
-
-        return (
-          <div className="bg-rose-50 border-2 border-rose-100 p-6 rounded-2xl animate-fadeIn">
+      {/* Misconception Alert Section for Session */}
+      {misconceptionDetails.length > 0 && (
+         <div className="bg-[#fff1f2] border border-[#ffe4e6] p-5 rounded-2xl animate-fadeIn">
             <div className="flex items-center gap-3 mb-4">
-                <i className="fas fa-exclamation-circle text-rose-500 text-xl"></i>
-                <h4 className="font-black text-rose-600 text-sm uppercase tracking-tight">Peringatan: Miskonsepsi Terdeteksi di Sesi Ini</h4>
+                <div className="w-8 h-8 bg-[#f43f5e] rounded-full flex items-center justify-center shadow-sm">
+                    <i className="fas fa-exclamation text-white text-sm"></i>
+                </div>
+                <h5 className="font-black text-[#f43f5e] text-sm uppercase tracking-tight">Perhatian: Miskonsepsi Terdeteksi</h5>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {sessionMisconceptions.sort((a,b) => b.count - a.count).map((m, idx) => (
-                <div key={idx} className="bg-white p-3 rounded-xl border border-rose-100 flex flex-col gap-1 shadow-sm">
-                  <div className="flex justify-between items-start">
-                    <span className="bg-rose-600 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest">Soal #{m.questionNo}</span>
-                    <span className="text-rose-500 text-[10px] font-black">{m.count} Siswa</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {misconceptionDetails.map((m, idx) => (
+                <div key={idx} className="bg-white border border-[#fecdd3]/30 p-3.5 rounded-xl flex flex-col gap-1.5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-0.5">
+                    <span className="bg-[#f43f5e] text-white text-[8px] px-2 py-0.5 rounded-md font-black uppercase tracking-widest shadow-sm">Soal #{m.questionNo}</span>
+                    <span className="text-[#f43f5e] text-[10px] font-black">{m.count} Siswa</span>
                   </div>
-                  <p className="text-[10px] font-black text-rose-700 uppercase tracking-tight truncate">{m.subject}</p>
-                  <p className="text-[9px] font-bold text-rose-400 leading-tight">{m.indicator}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black text-[#9f1239] uppercase tracking-tight truncate" title={m.subject}>{m.subject}</p>
+                    <p className="text-[10px] font-bold text-[#fb7185] leading-tight line-clamp-2">{m.indicator}</p>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        );
-      })()}
+         </div>
+      )}
+
 
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-teal-50">
@@ -191,7 +201,7 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
         <div className="bg-white rounded-xl shadow-sm border border-teal-50 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[11px]">
-              <thead className="bg-[#016569] text-white uppercase font-black">
+              <thead className="bg-[#016569] text-white uppercase font-black text-xs">
                 <tr>
                   <th className="px-6 py-4 w-12 text-center">No.</th>
                   <th className="px-6 py-4">Siswa & Kelas</th>
@@ -232,9 +242,9 @@ const AdminSessionAttempts: React.FC<AdminSessionAttemptsProps> = ({ sessionKey,
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button onClick={() => onNavigate('result-detail', { attemptId: a.id })} title="Lihat Detail Hasil" className="bg-teal-50 text-[#016569] w-8 h-8 rounded-xl hover:bg-[#ffdd00] hover:text-[#016569] transition-all border border-teal-100 shadow-sm flex items-center justify-center mx-auto">
+                      <Link href={`/console/management/results/detail/${a.id}`} title="Lihat Detail Hasil" className="bg-teal-50 text-[#016569] w-8 h-8 rounded-xl hover:bg-[#ffdd00] hover:text-[#016569] transition-all border border-teal-100 shadow-sm flex items-center justify-center mx-auto">
                         <i className="fas fa-id-card"></i>
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
 import { QuizAttempt, Question, Session, DiagnosticRule } from '@/types';
+import Link from 'next/link';
 
 interface AdminResultsProps {
   attempts: QuizAttempt[];
   questions: Question[];
   sessions: Session[];
   diagnosticRules: DiagnosticRule[];
-  onNavigate: (view: string, params?: any) => void;
 }
 
-const AdminResults: React.FC<AdminResultsProps> = ({ attempts, sessions, onNavigate }) => {
+const AdminResults: React.FC<AdminResultsProps> = ({ attempts, sessions }) => {
   const getPerc = (val: number, total: number) => total > 0 ? Number(((val / total) * 100).toFixed(1)) : 0;
 
   const sessionStats = useMemo(() => {
@@ -94,21 +94,15 @@ const AdminResults: React.FC<AdminResultsProps> = ({ attempts, sessions, onNavig
                         {s.avgDiagnostic.tidakDapatDikategorikan > 0 && <span className="text-slate-400">TDK: {s.avgDiagnostic.tidakDapatDikategorikan}%</span>}
                       </div>
                       
-                      {s.avgDiagnostic.miskonsepsi > 0 && (
-                        <div className="flex items-center gap-1.5 mt-1 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md w-fit animate-pulse">
-                          <i className="fas fa-exclamation-triangle text-rose-500 text-[8px]"></i>
-                          <span className="text-rose-600 font-black text-[8px] uppercase tracking-tighter">Miskonsepsi Terdeteksi</span>
-                        </div>
-                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button 
-                      onClick={() => onNavigate('result-session', { sessionKey: s.key })}
+                    <Link 
+                      href={`/console/management/results/session/${s.key}`}
                       className="bg-[#016569] text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase hover:bg-[#015255] transition-all shadow-sm flex items-center gap-2 mx-auto w-fit"
                     >
                       <i className="fas fa-eye"></i> Detail
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}

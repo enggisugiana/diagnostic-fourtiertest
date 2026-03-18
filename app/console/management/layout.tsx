@@ -43,7 +43,7 @@ export default function ManagementLayout({ children }: { children: React.ReactNo
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f7f7] flex flex-col font-['Inter']">
+    <div className="min-h-screen bg-[#f0f7f7] flex flex-col font-['Inter'] pb-24">
       <nav className="bg-[#016569] border-b border-[#015255] sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -107,11 +107,11 @@ export default function ManagementLayout({ children }: { children: React.ReactNo
         </div>
       </main>
 
-      <footer className="bg-white border-t border-teal-50 py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-2">
-          <p className="text-teal-800/40 text-xs font-medium">© {new Date().getFullYear()} Diagnostic <i>four-tier</i> Test</p>
+      <footer className="bg-white/80 backdrop-blur-md border-t border-teal-50 py-4 fixed bottom-0 left-0 right-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-teal-800/40 text-[10px] font-bold uppercase tracking-widest">© {new Date().getFullYear()} Diagnostic <i>four-tier</i> Test</p>
           <div className="flex gap-2">
-            <div className="bg-[#016569]/5 px-2 py-0.5 rounded-md text-[#016569] text-[9px] font-black uppercase tracking-widest">
+            <div className="bg-[#016569]/5 px-2 py-0.5 rounded-md text-[#016569] text-[9px] font-black uppercase tracking-widest border border-teal-600/10">
               Frontend Stable
             </div>
           </div>

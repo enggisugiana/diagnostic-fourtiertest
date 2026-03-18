@@ -62,7 +62,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ attempts, sessions, que
   
   attempts.forEach(attempt => {
     attempt.answers.forEach((ans, idx) => {
-      const q = questions[idx];
+      // Find the question: either by questionId (new) or by index (old/fallback)
+      let q = questions.find(question => question.id === ans.questionId);
+      if (!q && !ans.questionId) {
+        q = questions[idx];
+      }
+      
       if (!q) return;
 
       // Detect category using rules
@@ -173,31 +178,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ attempts, sessions, que
         </div>
       </div>
 
-      {/* Misconception Alert Section */}
+      {/* Misconception Alert Section (Visual Match to Image) */}
       {misconceptionDetails.length > 0 && (
-         <div className="bg-rose-50 border-2 border-rose-100 p-6 rounded-xl">
+         <div className="bg-[#fff1f2] border border-[#ffe4e6] p-5 rounded-2xl animate-fadeIn">
             <div className="flex items-center gap-3 mb-4">
-                <i className="fas fa-exclamation-circle text-rose-500 text-xl"></i>
-                <h4 className="font-black text-rose-600 text-sm uppercase tracking-tight">Perhatian: Detail Miskonsepsi Terdeteksi</h4>
+                <div className="w-8 h-8 bg-[#f43f5e] rounded-full flex items-center justify-center shadow-sm">
+                    <i className="fas fa-exclamation text-white text-sm"></i>
+                </div>
+                <h4 className="font-black text-[#f43f5e] text-sm uppercase tracking-tight">Perhatian: Miskonsepsi Terdeteksi</h4>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {misconceptionDetails.sort((a,b) => b.count - a.count).map((m, idx) => (
-                <div key={idx} className="bg-white/50 border border-rose-100 p-3 rounded-lg flex flex-col gap-1">
-                  <div className="flex justify-between items-start">
-                    <span className="bg-rose-600 text-white text-[8px] px-1.5 py-0.5 rounded font-black uppercase">Soal #{m.questionNo}</span>
-                    <span className="text-rose-500 text-[10px] font-black">{m.count} Siswa</span>
+                <div key={idx} className="bg-white border border-[#fecdd3]/30 p-3.5 rounded-xl flex flex-col gap-1.5 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-0.5">
+                    <span className="bg-[#f43f5e] text-white text-[8px] px-2 py-0.5 rounded-md font-black uppercase tracking-widest shadow-sm">Soal #{m.questionNo}</span>
+                    <span className="text-[#f43f5e] text-[10px] font-black">{m.count} Siswa</span>
                   </div>
-                  <p className="text-[10px] font-black text-rose-700 uppercase tracking-tight truncate" title={m.subject}>{m.subject}</p>
-                  <p className="text-[9px] font-bold text-rose-400 leading-tight line-clamp-2">{m.indicator}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[10px] font-black text-[#9f1239] uppercase tracking-tight truncate" title={m.subject}>{m.subject}</p>
+                    <p className="text-[10px] font-bold text-[#fb7185] leading-tight line-clamp-2">{m.indicator}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <p className="text-rose-400 text-[10px] font-bold mt-4 leading-relaxed border-t border-rose-100 pt-3 italic">
-                * Miskonsepsi didefinisikan sebagai kondisi di mana siswa menjawab salah namun merasa sangat yakin dengan jawabannya (Salah tapi Yakin).
-                Disarankan untuk meninjau kembali materi pada indikator-indikator di atas.
-            </p>
+            <div className="mt-5 pt-4 border-t border-[#fecdd3]/50">
+              <p className="text-[#fb7185] text-[9px] font-bold leading-relaxed italic opacity-80">
+                  * Miskonsepsi didefinisikan sebagai kondisi di mana siswa menjawab salah namun merasa sangat yakin dengan jawabannya (Salah tapi Yakin). Disarankan untuk meninjau kembali materi pada indikator tersebut.
+              </p>
+            </div>
          </div>
       )}
     </div>

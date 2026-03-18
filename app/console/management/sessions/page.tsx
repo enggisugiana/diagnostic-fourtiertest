@@ -1,21 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { sessionService } from '@/services/api';
-import { Session } from '@/types';
+import { sessionService, attemptService } from '@/services/api';
+import { Session, QuizAttempt } from '@/types';
 import AdminSessions from '@/components/admin/AdminSessions';
 
 export default function SessionsPage() {
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const ss = await sessionService.getAll();
+      const [ss, aa] = await Promise.all([
+        sessionService.getAll(),
+        attemptService.getAll()
+      ]);
       setSessions(ss);
+      setAttempts(aa);
     } catch (err) {
-      console.error('Failed to fetch sessions:', err);
+      console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
     }
@@ -65,6 +70,7 @@ export default function SessionsPage() {
     <div className="animate-fadeIn">
       <AdminSessions 
         sessions={sessions} 
+        attempts={attempts}
         onAddSession={handleAddSession} 
         onToggleSession={handleToggleSession} 
         onDeleteSession={handleDeleteSession} 
