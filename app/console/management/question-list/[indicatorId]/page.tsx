@@ -1,15 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { 
-  questionService, 
-  indicatorService 
-} from '@/services/api';
+import { questionService } from '@/services/api';
 import { Question } from '@/types';
 import AdminQuestions from '@/components/admin/AdminQuestions';
 
-export default function IndicatorQuestionsPage() {
+function IndicatorQuestionsContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -37,7 +34,6 @@ export default function IndicatorQuestionsPage() {
   }, []);
 
   const handleAddQuestions = (newQs: Omit<Question, 'id'>[]) => {
-    // This will now be handled by a separate page, but we keep the logic for consistency
     fetchData();
   };
 
@@ -90,5 +86,18 @@ export default function IndicatorQuestionsPage() {
         onNavigate={handleNavigate}
       />
     </div>
+  );
+}
+
+export default function IndicatorQuestionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="h-10 w-10 border-4 border-[#016569] border-t-transparent rounded-full animate-spin" />
+        <p className="font-black text-[#016569] uppercase tracking-widest text-[10px]">Memuat Halaman...</p>
+      </div>
+    }>
+      <IndicatorQuestionsContent />
+    </Suspense>
   );
 }

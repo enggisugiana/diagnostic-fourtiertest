@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { questionService } from '@/services/api';
 import { Question } from '@/types';
 import Link from 'next/link';
 
-export default function EditQuestionPage() {
+function EditQuestionContent() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -44,7 +44,7 @@ export default function EditQuestionPage() {
             t1Text: q.t1Text,
             t1Options: q.t1Options,
             t1Correct: q.t1Correct,
-            t1Image: q.t1Image,
+            t1Image: q.t1Image || '',
             t3Text: q.t3Text,
             t3Options: q.t3Options,
             t3Correct: q.t3Correct,
@@ -73,7 +73,6 @@ export default function EditQuestionPage() {
 
     setSaving(true);
     try {
-      // Clean the payload to match what the backend expects
       const payload = {
         indicatorId: manualQ.indicatorId,
         t1Text: manualQ.t1Text,
@@ -273,5 +272,18 @@ export default function EditQuestionPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function EditQuestionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="h-10 w-10 border-4 border-[#016569] border-t-transparent rounded-full animate-spin" />
+        <p className="font-black text-[#016569] uppercase tracking-widest text-[10px]">Memuat Halaman...</p>
+      </div>
+    }>
+      <EditQuestionContent />
+    </Suspense>
   );
 }

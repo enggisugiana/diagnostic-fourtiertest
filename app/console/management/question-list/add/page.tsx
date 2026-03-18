@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { questionService, indicatorService } from '@/services/api';
 import { Question } from '@/types';
 import Link from 'next/link';
 
-export default function AddQuestionPage() {
+function AddQuestionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const indicatorId = searchParams.get('indicatorId');
@@ -31,7 +31,6 @@ export default function AddQuestionPage() {
        router.push('/console/management/question-list');
        return;
     }
-    // Logic to fetch indicator name if needed - for now we'll just show it's for this indicatorId
     setIndicatorName(`Indikator ID: ${indicatorId}`);
   }, [indicatorId, router]);
 
@@ -220,5 +219,18 @@ export default function AddQuestionPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function AddQuestionPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="h-10 w-10 border-4 border-[#016569] border-t-transparent rounded-full animate-spin" />
+        <p className="font-black text-[#016569] uppercase tracking-widest text-[10px]">Memuat Halaman...</p>
+      </div>
+    }>
+      <AddQuestionContent />
+    </Suspense>
   );
 }

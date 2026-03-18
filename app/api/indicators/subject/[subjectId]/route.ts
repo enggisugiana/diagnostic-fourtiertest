@@ -3,9 +3,9 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { subjectId: string } }
+  { params }: { params: Promise<{ subjectId: string }> }
 ) {
-  const { subjectId } = params;
+  const { subjectId } = await params;
   try {
     const indicators = await prisma.indicator.findMany({
       where: { subjectId },
