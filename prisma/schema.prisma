@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  name     String
+}
+
+model Subject {
+  id         String      @id @default(uuid())
+  name       String      @unique
+  isActive   Boolean     @default(true)
+  indicators Indicator[]
+}
+
+model Indicator {
+  id        String     @id @default(uuid())
+  name      String
+  subjectId String
+  subject   Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([name, subjectId])
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  t1Text      String   @db.Text
+  t1Options   String   @db.Text // JSON stringified array
+  t1Correct   Int
+  t1Image     String?  @db.LongText
+  t3Text      String   @db.Text
+  t3Options   String   @db.Text // JSON stringified array
+  t3Correct   Int
+  createdAt   DateTime @default(now())
+}
+
+model Session {
+  id              String    @id @default(uuid())
+  key             String    @unique
+  name            String
+  school          String?
+  startTime       DateTime
+  endTime         DateTime
+  durationMinutes Int?      @default(0)
+  isActive           Boolean   @default(true)
+  randomizeQuestions Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  attempts        Attempt[]
+}
+
+model Attempt {
+  id                  String   @id @default(uuid())
+  sessionKey          String
+  studentNik          String
+  studentName         String?
+  studentClass        String?
+  score               Int
+  points              Int
+  totalQuestions      Int
+  timestamp           DateTime @default(now())
+  durationUsedSeconds Int
+  subject             String
+  answers             String   @db.Text // JSON stringified array of TierAnswer
+  stats               String   @db.Text // JSON stringified CategoryStats
+  subjectResults      String   @db.Text // JSON stringified SubjectResult[]
+  
+  session             Session  @relation(fields: [sessionKey], references: [key], onDelete: Cascade)
+}
+
+model DiagnosticRule {
+  id         String  @id
+  t1Correct  Boolean
+  t2Sure     Boolean
+  t3Correct  Boolean
+  t4Sure     Boolean
+  category   String
+  awardPoint Boolean
+}
